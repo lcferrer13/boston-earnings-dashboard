@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boston Employee Earnings 2025 — Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e8e8f0;
+    --text-dim: #8888a0;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --red: #ef4444;
+    --orange: #f59e0b;
+    --green: #22c55e;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+    --purple: #a855f7;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
+
+  /* Hero */
+  .hero {
+    padding: 80px 0 60px;
+    text-align: center;
+    background: linear-gradient(180deg, #12121a 0%, #0a0a0f 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero h1 {
+    font-size: 3.2rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #e8e8f0 0%, #6366f1 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+  .hero .subtitle {
+    font-size: 1.15rem;
+    color: var(--text-dim);
+    font-weight: 400;
+    max-width: 650px;
+    margin: 0 auto 48px;
+  }
+
+  /* Stat cards */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 0 auto;
+    max-width: 1200px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+  }
+  .stat-card .label { font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 8px; }
+  .stat-card .value { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; }
+  .stat-card .sub { font-size: 0.82rem; color: var(--text-dim); margin-top: 4px; }
+  .stat-card.accent .value { color: var(--accent2); }
+  .stat-card.red .value { color: var(--red); }
+  .stat-card.orange .value { color: var(--orange); }
+  .stat-card.green .value { color: var(--green); }
+  .stat-card.cyan .value { color: var(--cyan); }
+  .stat-card.pink .value { color: var(--pink); }
+
+  /* Sections */
+  .section {
+    padding: 64px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header {
+    margin-bottom: 32px;
+  }
+  .section-header h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .section-header .section-sub {
+    font-size: 0.95rem;
+    color: var(--text-dim);
+    max-width: 700px;
+  }
+  .section-header .insight {
+    display: inline-block;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin-top: 16px;
+    font-size: 0.9rem;
+    color: var(--accent2);
+    line-height: 1.5;
+  }
+  .section-header .insight.red {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+  }
+  .section-header .insight.orange {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.25);
+    color: #fcd34d;
+  }
+
+  /* Charts */
+  .chart-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .chart-container h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-dim);
+  }
+  .chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 900px) {
+    .chart-row { grid-template-columns: 1fr; }
+  }
+
+  /* Tables */
+  .data-table-wrap {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.72rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+  }
+  th.right, td.right { text-align: right; }
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(42, 42, 58, 0.5);
+    white-space: nowrap;
+  }
+  tr:hover td { background: rgba(99, 102, 241, 0.04); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-red { background: rgba(239,68,68,0.15); color: #fca5a5; }
+  .badge-orange { background: rgba(245,158,11,0.15); color: #fcd34d; }
+  .badge-green { background: rgba(34,197,94,0.15); color: #86efac; }
+  .badge-blue { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+
+  /* Comparison bars */
+  .compare-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+  .compare-label {
+    width: 140px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .compare-bar-wrap {
+    flex: 1;
+    background: var(--surface2);
+    border-radius: 6px;
+    height: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .compare-bar {
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: white;
+    transition: width 0.8s ease;
+  }
+  .compare-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    width: 100px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* Callout boxes */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .callout h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .callout-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+  }
+  .callout-stat .num { font-size: 2rem; font-weight: 800; }
+  .callout-stat .desc { font-size: 0.82rem; color: var(--text-dim); margin-top: 2px; }
+
+  /* Stacked bar */
+  .stacked-bar {
+    display: flex;
+    height: 40px;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+  .stacked-bar div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: white;
+    transition: flex 0.5s;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 40px 0;
+    color: var(--text-dim);
+    font-size: 0.82rem;
+  }
+  .footer a { color: var(--accent2); text-decoration: none; }
+
+  .highlight { color: var(--accent2); font-weight: 700; }
+  .highlight-red { color: var(--red); font-weight: 700; }
+  .highlight-orange { color: var(--orange); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<script>
+const DATA = {"employee_count": 25397, "total_payroll": 2455548218.85, "median_pay": 90581.58, "mean_pay": 96686.54639721227, "max_pay": 498144.66, "top_1_pct_threshold": 310530.93, "top_10_pct_threshold": 179835.71, "total_overtime": 183319196.79, "total_detail": 78994551.73, "total_quinn": 34712946.38, "total_regular": 2026348856.63, "pay_histogram": {"labels": ["$0K-$25K", "$25K-$50K", "$50K-$75K", "$75K-$100K", "$100K-$125K", "$125K-$150K", "$150K-$200K", "$200K-$250K", "$250K-$300K", "$300K-$400K", "$400K-$500K", "$500K+"], "counts": [4258, 2700, 3822, 3180, 3032, 4257, 2228, 1094, 499, 294, 33, 0]}, "departments": [{"name": "Boston Police Department", "count": 3094, "total": 534478397, "avg": 172747, "overtime": 101655214, "detail": 66078032, "quinn": 34702874, "regular": 307674421, "ot_pct": 19.0}, {"name": "Boston Fire Department", "count": 1805, "total": 316676060, "avg": 175444, "overtime": 49885790, "detail": 12565409, "quinn": 8530, "regular": 229634828, "ot_pct": 15.8}, {"name": "Special Education", "count": 1107, "total": 85502814, "avg": 77238, "overtime": 23079, "detail": 0, "quinn": 0, "regular": 80181978, "ot_pct": 0.0}, {"name": "Boston Public Library", "count": 556, "total": 39241988, "avg": 70579, "overtime": 893951, "detail": 0, "quinn": 0, "regular": 36884820, "ot_pct": 2.3}, {"name": "Facilities Management", "count": 609, "total": 37639160, "avg": 61805, "overtime": 1995249, "detail": 0, "quinn": 0, "regular": 33824479, "ot_pct": 5.3}, {"name": "Public Works Department", "count": 401, "total": 33248519, "avg": 82914, "overtime": 8930814, "detail": 0, "quinn": 0, "regular": 23477748, "ot_pct": 26.9}, {"name": "Traffic Division", "count": 411, "total": 27810666, "avg": 67666, "overtime": 3402509, "detail": 2640, "quinn": 0, "regular": 23728797, "ot_pct": 12.2}, {"name": "Madison Park Tech Vocational", "count": 252, "total": 26443310, "avg": 104934, "overtime": 0, "detail": 0, "quinn": 0, "regular": 25012538, "ot_pct": 0.0}, {"name": "Transportation", "count": 761, "total": 25915538, "avg": 34055, "overtime": 2153451, "detail": 0, "quinn": 0, "regular": 23549690, "ot_pct": 8.3}, {"name": "Boston Cntr - Youth & Families", "count": 460, "total": 22945399, "avg": 49881, "overtime": 532571, "detail": 0, "quinn": 0, "regular": 21724971, "ot_pct": 2.3}, {"name": "Parks Department", "count": 396, "total": 22914456, "avg": 57865, "overtime": 2675160, "detail": 68896, "quinn": 0, "regular": 19528148, "ot_pct": 11.7}, {"name": "Inspectional Services Dept", "count": 244, "total": 22372059, "avg": 91689, "overtime": 2796039, "detail": 0, "quinn": 0, "regular": 18719569, "ot_pct": 12.5}, {"name": "Boston Latin", "count": 189, "total": 22214407, "avg": 117537, "overtime": 0, "detail": 0, "quinn": 0, "regular": 21285700, "ot_pct": 0.0}, {"name": "Planning", "count": 219, "total": 20515866, "avg": 93680, "overtime": 10840, "detail": 700, "quinn": 0, "regular": 20133589, "ot_pct": 0.1}, {"name": "BPS Substitute Teachers/Nurs", "count": 1031, "total": 20233579, "avg": 19625, "overtime": 377, "detail": 0, "quinn": 0, "regular": 19106413, "ot_pct": 0.0}, {"name": "Dpt of Innovation & Technology", "count": 201, "total": 20152757, "avg": 100262, "overtime": 477745, "detail": 0, "quinn": 0, "regular": 18960686, "ot_pct": 2.4}, {"name": "East Boston High", "count": 169, "total": 19349067, "avg": 114492, "overtime": 0, "detail": 0, "quinn": 0, "regular": 18162696, "ot_pct": 0.0}, {"name": "Curley K-8", "count": 209, "total": 19239458, "avg": 92055, "overtime": 914, "detail": 0, "quinn": 0, "regular": 17897589, "ot_pct": 0.0}, {"name": "Food & Nutrition Services", "count": 668, "total": 19186317, "avg": 28722, "overtime": 59344, "detail": 0, "quinn": 0, "regular": 17565014, "ot_pct": 0.3}, {"name": "O'Bryant School of Math & Sci", "count": 156, "total": 17998685, "avg": 115376, "overtime": 0, "detail": 0, "quinn": 0, "regular": 17031439, "ot_pct": 0.0}, {"name": "Boston Latin Academy", "count": 156, "total": 17050448, "avg": 109298, "overtime": 936, "detail": 0, "quinn": 0, "regular": 16189796, "ot_pct": 0.0}, {"name": "Charlestown High", "count": 166, "total": 16273533, "avg": 98033, "overtime": 0, "detail": 0, "quinn": 0, "regular": 15412194, "ot_pct": 0.0}, {"name": "Henderson K-12 Inclusion", "count": 166, "total": 15947019, "avg": 96066, "overtime": 0, "detail": 0, "quinn": 0, "regular": 15106022, "ot_pct": 0.0}, {"name": "Property Management", "count": 197, "total": 15834224, "avg": 80377, "overtime": 3051444, "detail": 278875, "quinn": 0, "regular": 11919342, "ot_pct": 19.3}, {"name": "TechBoston Academy", "count": 145, "total": 15198795, "avg": 104819, "overtime": 0, "detail": 0, "quinn": 0, "regular": 14180980, "ot_pct": 0.0}, {"name": "Office of Housing", "count": 163, "total": 14892814, "avg": 91367, "overtime": 0, "detail": 0, "quinn": 0, "regular": 14377989, "ot_pct": 0.0}, {"name": "Murphy K-8", "count": 151, "total": 14866449, "avg": 98453, "overtime": 63056, "detail": 0, "quinn": 0, "regular": 13999826, "ot_pct": 0.4}, {"name": "Mel H King South End Academy", "count": 141, "total": 14365047, "avg": 101880, "overtime": 984, "detail": 0, "quinn": 0, "regular": 13408086, "ot_pct": 0.0}, {"name": "English High", "count": 136, "total": 14363930, "avg": 105617, "overtime": 125, "detail": 0, "quinn": 0, "regular": 13667129, "ot_pct": 0.0}, {"name": "Brighton High", "count": 132, "total": 13908466, "avg": 105367, "overtime": 0, "detail": 0, "quinn": 0, "regular": 13065063, "ot_pct": 0.0}, {"name": "Lee K-8", "count": 156, "total": 13634810, "avg": 87403, "overtime": 33, "detail": 0, "quinn": 0, "regular": 12846798, "ot_pct": 0.0}, {"name": "Teaching & Learning", "count": 110, "total": 13398096, "avg": 121801, "overtime": 0, "detail": 0, "quinn": 0, "regular": 12814431, "ot_pct": 0.0}, {"name": "Ruth Batson Academy", "count": 131, "total": 12821960, "avg": 97878, "overtime": 1821, "detail": 0, "quinn": 0, "regular": 11972927, "ot_pct": 0.0}, {"name": "Blackstone Elementary", "count": 145, "total": 12765107, "avg": 88035, "overtime": 1233, "detail": 0, "quinn": 0, "regular": 11965295, "ot_pct": 0.0}, {"name": "Orchard Gardens K-8", "count": 152, "total": 12708640, "avg": 83609, "overtime": 10136, "detail": 0, "quinn": 0, "regular": 11972357, "ot_pct": 0.1}, {"name": "New Mission High", "count": 119, "total": 12621386, "avg": 106062, "overtime": 0, "detail": 0, "quinn": 0, "regular": 11986456, "ot_pct": 0.0}, {"name": "Quincy Elementary", "count": 141, "total": 12399312, "avg": 87938, "overtime": 1898, "detail": 0, "quinn": 0, "regular": 11485135, "ot_pct": 0.0}, {"name": "Umana Academy", "count": 144, "total": 12098770, "avg": 84019, "overtime": 306, "detail": 0, "quinn": 0, "regular": 11231766, "ot_pct": 0.0}, {"name": "Sarah Roberts ElementarySchool", "count": 136, "total": 11827337, "avg": 86966, "overtime": 2203, "detail": 0, "quinn": 0, "regular": 10878566, "ot_pct": 0.0}, {"name": "Edison Elementary School", "count": 121, "total": 11295584, "avg": 93352, "overtime": 480, "detail": 0, "quinn": 0, "regular": 10665062, "ot_pct": 0.0}], "top_earners": [{"name": "Connolly,Timothy", "dept": "Boston Police Department", "title": "Police Captain/DDC", "total": 498145, "regular": 194382, "overtime": 228925, "detail": 0, "quinn": 48596, "other": 26242}, {"name": "Demesmin,Stanley", "dept": "Boston Police Department", "title": "Police Lieutenant (Det)", "total": 490239, "regular": 174567, "overtime": 236961, "detail": 19407, "quinn": 34913, "other": 24390}, {"name": "Hegarty,Michael J", "dept": "Boston Police Department", "title": "Police Captain/DDC", "total": 488434, "regular": 194382, "overtime": 94495, "detail": 129147, "quinn": 48596, "other": 21814}, {"name": "Danilecki,John H", "dept": "Boston Police Department", "title": "Police Captain", "total": 485534, "regular": 194138, "overtime": 196303, "detail": 17725, "quinn": 48535, "other": 28834}, {"name": "Lanchester,Wayne", "dept": "Boston Police Department", "title": "Police Captain/DDC", "total": 479062, "regular": 194382, "overtime": 72712, "detail": 138005, "quinn": 48596, "other": 25367}, {"name": "Gero,Jarrod A", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 463529, "regular": 150474, "overtime": 212578, "detail": 57044, "quinn": 37289, "other": 6143}, {"name": "Kervin,Timothy M.", "dept": "Boston Police Department", "title": "Lieut-Hackney Carriage Inves.", "total": 463529, "regular": 167451, "overtime": 7231, "detail": 179518, "quinn": 44233, "other": 61606}, {"name": "Almeida,Ismael Lopes", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 456363, "regular": 153891, "overtime": 192403, "detail": 79037, "quinn": 30232, "other": 800}, {"name": "Barrett,Thomas E.", "dept": "Boston Police Department", "title": "Police Lieutenant", "total": 445805, "regular": 164829, "overtime": 171651, "detail": 42762, "quinn": 41207, "other": 25355}, {"name": "Gould,John J", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 439388, "regular": 156969, "overtime": 179574, "detail": 64135, "quinn": 37859, "other": 850}, {"name": "Smith,Sean P", "dept": "Boston Police Department", "title": "Police Lieutenant", "total": 435391, "regular": 145516, "overtime": 99192, "detail": 71817, "quinn": 36379, "other": 82486}, {"name": "Pusey,Daniel C.", "dept": "Boston Police Department", "title": "Police Lieutenant", "total": 434956, "regular": 166648, "overtime": 106420, "detail": 121753, "quinn": 33330, "other": 6805}, {"name": "Blando,Carl", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 428156, "regular": 161019, "overtime": 196093, "detail": 18320, "quinn": 38682, "other": 14042}, {"name": "Shikoluk,Michael", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 427639, "regular": 152343, "overtime": 187555, "detail": 41405, "quinn": 38263, "other": 5896}, {"name": "Hosein,Haseeb", "dept": "Boston Police Department", "title": "Police Captain/DDC", "total": 425082, "regular": 193506, "overtime": 161709, "detail": 3128, "quinn": 48377, "other": 18362}, {"name": "Adams,Daniel J", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 423193, "regular": 158112, "overtime": 120879, "detail": 94329, "quinn": 39528, "other": 10344}, {"name": "Bickerton,Dean", "dept": "Boston Police Department", "title": "Police Captain/DDC", "total": 420586, "regular": 194170, "overtime": 64543, "detail": 109858, "quinn": 48543, "other": 3474}, {"name": "Leahy,Brian Matthew", "dept": "Boston Police Department", "title": "Police Lieutenant/Hdq Dispatch", "total": 420173, "regular": 174908, "overtime": 99928, "detail": 94741, "quinn": 43479, "other": 7117}, {"name": "Cellucci,Charles J", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 420120, "regular": 163450, "overtime": 177233, "detail": 25966, "quinn": 38682, "other": 14789}, {"name": "Johnson,Rick E", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 419510, "regular": 154727, "overtime": 202948, "detail": 0, "quinn": 38682, "other": 23153}, {"name": "McCarthy,Michael P", "dept": "Boston Police Department", "title": "Police Lieutenant (Det)", "total": 418174, "regular": 174567, "overtime": 173952, "detail": 0, "quinn": 43642, "other": 26013}, {"name": "Driscoll,Richard J", "dept": "Boston Police Department", "title": "Police Captain/DDC", "total": 417160, "regular": 194170, "overtime": 145610, "detail": 0, "quinn": 48543, "other": 28838}, {"name": "Hughes,John C.", "dept": "Boston Police Department", "title": "Police Captain", "total": 416152, "regular": 187276, "overtime": 142287, "detail": 36362, "quinn": 37455, "other": 12772}, {"name": "Casallas,Richard", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 414625, "regular": 158066, "overtime": 142021, "detail": 51430, "quinn": 39517, "other": 23591}, {"name": "Terenzi,Phillip", "dept": "Boston Police Department", "title": "Police Captain", "total": 414097, "regular": 194138, "overtime": 153349, "detail": 12903, "quinn": 48535, "other": 5172}, {"name": "Conley,James B", "dept": "Boston Police Department", "title": "Police Lieutenant (Det)", "total": 413271, "regular": 174355, "overtime": 170181, "detail": 0, "quinn": 43589, "other": 25147}, {"name": "MacKinnon,Charles V", "dept": "Boston Police Department", "title": "Police Lieutenant", "total": 412658, "regular": 169412, "overtime": 131293, "detail": 57994, "quinn": 42353, "other": 11606}, {"name": "Galvao,Maria P", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 410739, "regular": 158527, "overtime": 121930, "detail": 90228, "quinn": 39254, "other": 800}, {"name": "Quiles,Wilson", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 409820, "regular": 153609, "overtime": 120195, "detail": 92317, "quinn": 37434, "other": 6265}, {"name": "Aziz,Michael", "dept": "Boston Police Department", "title": "Police Lieutenant", "total": 403948, "regular": 154804, "overtime": 190130, "detail": 11966, "quinn": 38098, "other": 8950}, {"name": "Sanchez,Rene", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 401913, "regular": 155455, "overtime": 128300, "detail": 117358, "quinn": 0, "other": 800}, {"name": "Cullity,Patrick J", "dept": "Boston Police Department", "title": "Police Lieutenant (Det)", "total": 401879, "regular": 121096, "overtime": 96119, "detail": 35261, "quinn": 30274, "other": 119128}, {"name": "Keenan,Donald F", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 400740, "regular": 159732, "overtime": 169811, "detail": 14938, "quinn": 38682, "other": 17577}, {"name": "Facey,Leighton B", "dept": "Boston Police Department", "title": "Police Captain (Det)", "total": 399944, "regular": 169313, "overtime": 127193, "detail": 0, "quinn": 49405, "other": 25725}, {"name": "Brown,Michael A", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 399755, "regular": 157900, "overtime": 183799, "detail": 0, "quinn": 39475, "other": 18581}, {"name": "Driscoll,Jeffery M.", "dept": "Boston Police Department", "title": "Police Officer", "total": 399635, "regular": 123570, "overtime": 84946, "detail": 159377, "quinn": 30892, "other": 850}, {"name": "Sweeney,Steven", "dept": "Boston Police Department", "title": "Police Captain/DDC", "total": 399596, "regular": 194382, "overtime": 108233, "detail": 23068, "quinn": 48596, "other": 25317}, {"name": "Mammone,Adam A.", "dept": "Boston Police Department", "title": "Police Lieutenant (Det)", "total": 398437, "regular": 174293, "overtime": 156371, "detail": 7221, "quinn": 43573, "other": 16979}, {"name": "Jefferson,Tarus Jay", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 397049, "regular": 150642, "overtime": 170973, "detail": 23527, "quinn": 37569, "other": 14338}, {"name": "James,Alfred A", "dept": "Boston Police Department", "title": "Police Detective", "total": 396615, "regular": 132017, "overtime": 114866, "detail": 104926, "quinn": 26404, "other": 18402}, {"name": "Monahan,Keith", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 396387, "regular": 154121, "overtime": 40409, "detail": 156499, "quinn": 37756, "other": 7602}, {"name": "Taxter,Lucas E", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 396331, "regular": 158112, "overtime": 185806, "detail": 4912, "quinn": 39528, "other": 7972}, {"name": "Kwong,Bruce", "dept": "Boston Police Department", "title": "Police Officer", "total": 392803, "regular": 122010, "overtime": 1413, "detail": 168688, "quinn": 30503, "other": 70189}, {"name": "Joseph,Martin M", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 390669, "regular": 158112, "overtime": 51817, "detail": 149884, "quinn": 15811, "other": 15044}, {"name": "Crowley,Dennis J.", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 389270, "regular": 153652, "overtime": 103347, "detail": 94007, "quinn": 37463, "other": 800}, {"name": "Kennedy,Gerard Stephen", "dept": "Boston Police Department", "title": "Police Sergeant/Hdq Dispatcher", "total": 386040, "regular": 155560, "overtime": 76629, "detail": 132349, "quinn": 15189, "other": 6314}, {"name": "Burns,Shawn", "dept": "Boston Police Department", "title": "Police Captain/DDC", "total": 384889, "regular": 194336, "overtime": 65003, "detail": 59691, "quinn": 38867, "other": 26991}, {"name": "Garcia,Francis N", "dept": "Boston Police Department", "title": "Police Officer", "total": 384683, "regular": 132534, "overtime": 160680, "detail": 90669, "quinn": 0, "other": 800}, {"name": "Rosario,Wandy A", "dept": "Boston Police Department", "title": "Police Officer", "total": 384562, "regular": 123049, "overtime": 98371, "detail": 137681, "quinn": 24610, "other": 850}, {"name": "Sullivan,Marc", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 382899, "regular": 158112, "overtime": 161578, "detail": 802, "quinn": 39528, "other": 22879}], "ot_warriors": [{"name": "Demesmin,Stanley", "dept": "Boston Police Department", "title": "Police Lieutenant (Det)", "total": 490239, "regular": 174567, "overtime": 236961, "ot_ratio": 1.36}, {"name": "Connolly,Timothy", "dept": "Boston Police Department", "title": "Police Captain/DDC", "total": 498145, "regular": 194382, "overtime": 228925, "ot_ratio": 1.18}, {"name": "Acosta,Jose L", "dept": "Boston Police Department", "title": "Police Officer", "total": 362378, "regular": 132534, "overtime": 217111, "ot_ratio": 1.64}, {"name": "Gero,Jarrod A", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 463529, "regular": 150474, "overtime": 212578, "ot_ratio": 1.41}, {"name": "Monteiro,Joao J.", "dept": "Boston Police Department", "title": "Police Detective", "total": 362303, "regular": 137996, "overtime": 211696, "ot_ratio": 1.53}, {"name": "Johnson,Rick E", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 419510, "regular": 154727, "overtime": 202948, "ot_ratio": 1.31}, {"name": "Danilecki,John H", "dept": "Boston Police Department", "title": "Police Captain", "total": 485534, "regular": 194138, "overtime": 196303, "ot_ratio": 1.01}, {"name": "Blando,Carl", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 428156, "regular": 161019, "overtime": 196093, "ot_ratio": 1.22}, {"name": "Araica,Henry A", "dept": "Boston Police Department", "title": "Police Offc/FgrPrt Ev Tch 4$10", "total": 351793, "regular": 133088, "overtime": 195362, "ot_ratio": 1.47}, {"name": "Almeida,Ismael Lopes", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 456363, "regular": 153891, "overtime": 192403, "ot_ratio": 1.25}, {"name": "Pena,Eddy B.", "dept": "Boston Police Department", "title": "Police Offc/FgrPrt Ev Tch 4$10", "total": 373890, "regular": 122298, "overtime": 191141, "ot_ratio": 1.56}, {"name": "Aziz,Michael", "dept": "Boston Police Department", "title": "Police Lieutenant", "total": 403948, "regular": 154804, "overtime": 190130, "ot_ratio": 1.23}, {"name": "Medina,Richard L", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 357836, "regular": 164014, "overtime": 188840, "ot_ratio": 1.15}, {"name": "Shikoluk,Michael", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 427639, "regular": 152343, "overtime": 187555, "ot_ratio": 1.23}, {"name": "Barry,Keith", "dept": "Inspectional Services Dept", "title": "Wire Inspector", "total": 299565, "regular": 106885, "overtime": 186433, "ot_ratio": 1.74}, {"name": "Taxter,Lucas E", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 396331, "regular": 158112, "overtime": 185806, "ot_ratio": 1.18}, {"name": "Brown,Michael A", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 399755, "regular": 157900, "overtime": 183799, "ot_ratio": 1.16}, {"name": "Diaz Jr.,Jose Miguel", "dept": "Boston Police Department", "title": "Police Officer", "total": 372719, "regular": 129505, "overtime": 182277, "ot_ratio": 1.41}, {"name": "Jefferson,Nina", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 357258, "regular": 162860, "overtime": 182088, "ot_ratio": 1.12}, {"name": "Gould,John J", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 439388, "regular": 156969, "overtime": 179574, "ot_ratio": 1.14}, {"name": "Cellucci,Charles J", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 420120, "regular": 163450, "overtime": 177233, "ot_ratio": 1.08}, {"name": "Christie,Albert C", "dept": "Boston Police Department", "title": "Police Officer", "total": 310578, "regular": 132534, "overtime": 177194, "ot_ratio": 1.34}, {"name": "Barrett,Thomas E.", "dept": "Boston Police Department", "title": "Police Lieutenant", "total": 445805, "regular": 164829, "overtime": 171651, "ot_ratio": 1.04}, {"name": "Jefferson,Tarus Jay", "dept": "Boston Police Department", "title": "Police Sergeant", "total": 397049, "regular": 150642, "overtime": 170973, "ot_ratio": 1.13}, {"name": "Keenan,Donald F", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 400740, "regular": 159732, "overtime": 169811, "ot_ratio": 1.06}, {"name": "Nguyen,Jimmy", "dept": "Boston Police Department", "title": "Police Officer", "total": 335373, "regular": 125172, "overtime": 169787, "ot_ratio": 1.36}, {"name": "Byrnes,Michael H.", "dept": "Boston Police Department", "title": "Police Detective", "total": 332635, "regular": 128859, "overtime": 164956, "ot_ratio": 1.28}, {"name": "Borges,Omar", "dept": "Boston Police Department", "title": "Police Detective", "total": 333326, "regular": 131805, "overtime": 164924, "ot_ratio": 1.25}, {"name": "Sullivan,Marc", "dept": "Boston Police Department", "title": "Police Sergeant (Det)", "total": 382899, "regular": 158112, "overtime": 161578, "ot_ratio": 1.02}, {"name": "Beaulieu,George J.", "dept": "Boston Police Department", "title": "Police Offc/FgrPrt Ev Tch 4$10", "total": 306865, "regular": 132489, "overtime": 161444, "ot_ratio": 1.22}], "ot_warrior_count": 86, "group_comparison": [{"label": "Police", "count": 3094, "avg_total": 172747, "median_total": 178838, "avg_regular": 99442, "avg_overtime": 32856, "avg_detail": 21357, "total_payroll": 534478397}, {"label": "Firefighters", "count": 1805, "avg_total": 175444, "median_total": 174516, "avg_regular": 127222, "avg_overtime": 27638, "avg_detail": 6961, "total_payroll": 316676060}, {"label": "Teachers", "count": 5381, "avg_total": 110327, "median_total": 122869, "avg_regular": 104712, "avg_overtime": 2, "avg_detail": 0, "total_payroll": 593670533}, {"label": "Paraprofessionals", "count": 2143, "avg_total": 50000, "median_total": 55219, "avg_regular": 44491, "avg_overtime": 79, "avg_detail": 0, "total_payroll": 107149850}, {"label": "Nurses", "count": 184, "avg_total": 106779, "median_total": 120025, "avg_regular": 101746, "avg_overtime": 0, "avg_detail": 0, "total_payroll": 19647249}, {"label": "Substitutes", "count": 1041, "avg_total": 20836, "median_total": 11850, "avg_regular": 19755, "avg_overtime": 6, "avg_detail": 0, "total_payroll": 21690133}, {"label": "Cafeteria Workers", "count": 598, "avg_total": 24387, "median_total": 20315, "avg_regular": 22025, "avg_overtime": 72, "avg_detail": 0, "total_payroll": 14583191}], "payroll_composition": {"regular": 2026348857, "overtime": 183319197, "detail": 78994552, "quinn": 34712946, "other": 66278737, "retro": 32929546, "injured": 32960894}, "bpd_ranks": [{"rank": "Police Captain/DDC", "count": 15, "avg_total": 372964, "avg_overtime": 87564, "avg_detail": 35000, "avg_quinn": 44144, "avg_regular": 168945}, {"rank": "Police Captain", "count": 5, "avg_total": 347667, "avg_overtime": 98666, "avg_detail": 14890, "avg_quinn": 38885, "avg_regular": 149424}, {"rank": "Police Lieutenant (Det)", "count": 21, "avg_total": 329061, "avg_overtime": 88806, "avg_detail": 8772, "avg_quinn": 39378, "avg_regular": 167616}, {"rank": "Supn Bpd", "count": 10, "avg_total": 300539, "avg_overtime": 0, "avg_detail": 0, "avg_quinn": 50413, "avg_regular": 202074}, {"rank": "Dep Supn (Bpd)", "count": 16, "avg_total": 299801, "avg_overtime": 23150, "avg_detail": 2539, "avg_quinn": 46737, "avg_regular": 179170}, {"rank": "Police Lieutenant", "count": 50, "avg_total": 295178, "avg_overtime": 65257, "avg_detail": 24520, "avg_quinn": 36818, "avg_regular": 155959}, {"rank": "Police Sergeant (Det)", "count": 114, "avg_total": 291891, "avg_overtime": 83006, "avg_detail": 12557, "avg_quinn": 32045, "avg_regular": 145867}, {"rank": "Police Sergeant/Mobile Oper", "count": 5, "avg_total": 272793, "avg_overtime": 78386, "avg_detail": 1724, "avg_quinn": 33262, "avg_regular": 148403}, {"rank": "Police Sergeant/FgrPrt Ev Tech", "count": 5, "avg_total": 266839, "avg_overtime": 59277, "avg_detail": 19914, "avg_quinn": 35888, "avg_regular": 147124}, {"rank": "Police Sergeant", "count": 139, "avg_total": 262731, "avg_overtime": 56783, "avg_detail": 25565, "avg_quinn": 29323, "avg_regular": 141867}, {"rank": "Police Sergeant/Comm Serv Offc", "count": 9, "avg_total": 252219, "avg_overtime": 50068, "avg_detail": 22368, "avg_quinn": 25886, "avg_regular": 143538}, {"rank": "Police Sergeant/AcadInstructor", "count": 6, "avg_total": 236270, "avg_overtime": 51895, "avg_detail": 0, "avg_quinn": 29042, "avg_regular": 104137}, {"rank": "Police Offc/FgrPrt Ev Tch 4$10", "count": 21, "avg_total": 228881, "avg_overtime": 84250, "avg_detail": 2749, "avg_quinn": 14065, "avg_regular": 125800}, {"rank": "Police Officer Hdq Dispatch", "count": 12, "avg_total": 228749, "avg_overtime": 64574, "avg_detail": 27572, "avg_quinn": 9812, "avg_regular": 118196}, {"rank": "Police Offc/Auto Invest 4$10", "count": 11, "avg_total": 225898, "avg_overtime": 59270, "avg_detail": 30491, "avg_quinn": 10571, "avg_regular": 124024}], "dept_ot_concentration": [{"name": "Public Works Department", "count": 401, "total": 33248519, "avg": 82914, "overtime": 8930814, "detail": 0, "quinn": 0, "regular": 23477748, "ot_pct": 26.9}, {"name": "Property Management", "count": 197, "total": 15834224, "avg": 80377, "overtime": 3051444, "detail": 278875, "quinn": 0, "regular": 11919342, "ot_pct": 19.3}, {"name": "Boston Police Department", "count": 3094, "total": 534478397, "avg": 172747, "overtime": 101655214, "detail": 66078032, "quinn": 34702874, "regular": 307674421, "ot_pct": 19.0}, {"name": "Boston Fire Department", "count": 1805, "total": 316676060, "avg": 175444, "overtime": 49885790, "detail": 12565409, "quinn": 8530, "regular": 229634828, "ot_pct": 15.8}, {"name": "Inspectional Services Dept", "count": 244, "total": 22372059, "avg": 91689, "overtime": 2796039, "detail": 0, "quinn": 0, "regular": 18719569, "ot_pct": 12.5}, {"name": "Traffic Division", "count": 411, "total": 27810666, "avg": 67666, "overtime": 3402509, "detail": 2640, "quinn": 0, "regular": 23728797, "ot_pct": 12.2}, {"name": "Parks Department", "count": 396, "total": 22914456, "avg": 57865, "overtime": 2675160, "detail": 68896, "quinn": 0, "regular": 19528148, "ot_pct": 11.7}, {"name": "Transportation", "count": 761, "total": 25915538, "avg": 34055, "overtime": 2153451, "detail": 0, "quinn": 0, "regular": 23549690, "ot_pct": 8.3}, {"name": "Facilities Management", "count": 609, "total": 37639160, "avg": 61805, "overtime": 1995249, "detail": 0, "quinn": 0, "regular": 33824479, "ot_pct": 5.3}, {"name": "Dpt of Innovation & Technology", "count": 201, "total": 20152757, "avg": 100262, "overtime": 477745, "detail": 0, "quinn": 0, "regular": 18960686, "ot_pct": 2.4}, {"name": "Boston Public Library", "count": 556, "total": 39241988, "avg": 70579, "overtime": 893951, "detail": 0, "quinn": 0, "regular": 36884820, "ot_pct": 2.3}, {"name": "Boston Cntr - Youth & Families", "count": 460, "total": 22945399, "avg": 49881, "overtime": 532571, "detail": 0, "quinn": 0, "regular": 21724971, "ot_pct": 2.3}, {"name": "Murphy K-8", "count": 151, "total": 14866449, "avg": 98453, "overtime": 63056, "detail": 0, "quinn": 0, "regular": 13999826, "ot_pct": 0.4}, {"name": "Food & Nutrition Services", "count": 668, "total": 19186317, "avg": 28722, "overtime": 59344, "detail": 0, "quinn": 0, "regular": 17565014, "ot_pct": 0.3}, {"name": "Planning", "count": 219, "total": 20515866, "avg": 93680, "overtime": 10840, "detail": 700, "quinn": 0, "regular": 20133589, "ot_pct": 0.1}], "over_200k_count": 1920, "over_200k_by_dept": [{"dept": "Boston Police Department", "count": 1256}, {"dept": "Boston Fire Department", "count": 570}, {"dept": "Public Works Department", "count": 16}, {"dept": "School Support", "count": 10}, {"dept": "Inspectional Services Dept", "count": 7}, {"dept": "Planning", "count": 6}, {"dept": "Chief of Staff", "count": 6}, {"dept": "Traffic Division", "count": 4}, {"dept": "Facilities Management", "count": 3}, {"dept": "Office of Human Resources BPS", "count": 3}, {"dept": "Property Management", "count": 3}, {"dept": "Office of Streets", "count": 2}, {"dept": "Family & Community Advancement", "count": 2}, {"dept": "Dpt of Innovation & Technology", "count": 2}, {"dept": "TechBoston Academy", "count": 2}], "police_share": {"headcount_pct": 12.2, "payroll_pct": 21.8, "overtime_pct": 55.5, "detail_pct": 83.6}, "fire_share": {"headcount_pct": 7.1, "payroll_pct": 12.9, "overtime_pct": 27.2}};
+</script>
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <div class="container">
+    <h1>Boston City Payroll</h1>
+    <p class="subtitle">A data-driven look at how $2.46 billion in taxpayer money was distributed across 25,397 city employees in 2025</p>
+    <div class="stat-grid">
+      <div class="stat-card accent">
+        <div class="label">Total Payroll</div>
+        <div class="value" id="hero-payroll"></div>
+        <div class="sub">Fiscal Year 2025</div>
+      </div>
+      <div class="stat-card green">
+        <div class="label">Employees</div>
+        <div class="value" id="hero-employees"></div>
+        <div class="sub">across 228 departments</div>
+      </div>
+      <div class="stat-card cyan">
+        <div class="label">Median Pay</div>
+        <div class="value" id="hero-median"></div>
+        <div class="sub" id="hero-mean-sub"></div>
+      </div>
+      <div class="stat-card orange">
+        <div class="label">Overtime Paid</div>
+        <div class="value" id="hero-overtime"></div>
+        <div class="sub" id="hero-ot-sub"></div>
+      </div>
+      <div class="stat-card pink">
+        <div class="label">Highest Earner</div>
+        <div class="value" id="hero-max"></div>
+        <div class="sub" id="hero-max-sub"></div>
+      </div>
+      <div class="stat-card red">
+        <div class="label">$200K+ Club</div>
+        <div class="value" id="hero-200k"></div>
+        <div class="sub" id="hero-200k-sub"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 1. PAY DISTRIBUTION ===== -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Where Does the Money Go?</h2>
+      <p class="section-sub">The $2.46 billion payroll is not just base salaries. Overtime, detail assignments, education incentives, and other supplemental pay dramatically reshape who earns what.</p>
+    </div>
+    <div class="chart-row">
+      <div class="chart-container">
+        <h3>Payroll Composition — $2.46B breakdown</h3>
+        <canvas id="compositionChart" height="280"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Gross Pay Distribution — 25,397 employees</h3>
+        <canvas id="histogramChart" height="280"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 2. POLICE & FIRE DOMINANCE ===== -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>The Public Safety Premium</h2>
+      <p class="section-sub">Boston Police and Fire together account for 19% of the city's workforce but take home 35% of all pay. The gap is driven by overtime, "detail" pay (private companies paying officers for security), and Quinn Bill education incentives.</p>
+      <div class="insight red">Police are <strong id="bpd-headcount-pct"></strong> of employees but collect <strong id="bpd-payroll-pct"></strong> of payroll, <strong id="bpd-ot-pct"></strong> of all overtime, and <strong id="bpd-detail-pct"></strong> of all detail pay.</div>
+    </div>
+
+    <div class="callout">
+      <h3>Workforce Share vs. Payroll Share</h3>
+      <div id="share-bars"></div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-container">
+        <h3>Average Total Compensation by Group</h3>
+        <canvas id="groupAvgChart" height="300"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Where Police Pay Comes From (by Rank)</h3>
+        <canvas id="bpdRankChart" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 3. OVERTIME MACHINE ===== -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>The Overtime Machine</h2>
+      <p class="section-sub">$183 million in overtime was paid in 2025. Some employees earned more in overtime alone than their entire base salary — effectively doubling or tripling their pay.</p>
+      <div class="insight orange">There are <strong id="ot-warrior-count"></strong> employees whose overtime exceeded their base salary (with base &gt; $10K). The top overtime earner collected <strong id="ot-warrior-top"></strong> in OT on a base of <strong id="ot-warrior-top-base"></strong>.</div>
+    </div>
+
+    <div class="chart-container">
+      <h3>Overtime Concentration by Department (as % of total department pay)</h3>
+      <canvas id="otDeptChart" height="350"></canvas>
+    </div>
+
+    <div class="data-table-wrap" style="max-height: 500px; overflow-y: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Title</th>
+            <th class="right">Base Pay</th>
+            <th class="right">Overtime</th>
+            <th class="right">OT / Base Ratio</th>
+            <th class="right">Total Gross</th>
+          </tr>
+        </thead>
+        <tbody id="ot-warriors-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 4. THE $200K CLUB ===== -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>The $200K Club</h2>
+      <p class="section-sub">Over <span id="club-count" class="highlight"></span> city employees earned $200,000 or more. The vast majority are in public safety — but not all are chiefs or commissioners.</p>
+    </div>
+    <div class="chart-row">
+      <div class="chart-container">
+        <h3>$200K+ Employees by Department</h3>
+        <canvas id="club200kChart" height="350"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Top 15 Departments — Avg Total Compensation</h3>
+        <canvas id="deptAvgChart" height="350"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 5. TOP EARNERS TABLE ===== -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Highest-Paid City Employees</h2>
+      <p class="section-sub">The top 50 earners in Boston city government. Notice how supplemental pay — overtime, detail, and Quinn education bonuses — pushes many well beyond their base salary.</p>
+    </div>
+    <div class="data-table-wrap" style="max-height: 700px; overflow-y: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Title</th>
+            <th class="right">Base</th>
+            <th class="right">Overtime</th>
+            <th class="right">Detail</th>
+            <th class="right">Quinn Ed.</th>
+            <th class="right">Other</th>
+            <th class="right">Total</th>
+          </tr>
+        </thead>
+        <tbody id="top-earners-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 6. DEPARTMENT DEEP DIVE ===== -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Department Landscape</h2>
+      <p class="section-sub">How the city's 228 departments compare in headcount and pay. Bubble size shows total payroll spend.</p>
+    </div>
+    <div class="chart-container">
+      <h3>Headcount vs. Average Pay (top 25 departments)</h3>
+      <canvas id="deptScatterChart" height="420"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 7. TEACHER COMPARISON ===== -->
+<div class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Who Serves, Who Earns?</h2>
+      <p class="section-sub">Boston's teachers, paraprofessionals, nurses, and cafeteria workers keep the school system running — but their compensation tells a different story than public safety.</p>
+    </div>
+    <div class="callout">
+      <h3>Head-to-Head: Median Total Compensation</h3>
+      <div id="comparison-bars"></div>
+    </div>
+
+    <div class="chart-container">
+      <h3>Compensation Breakdown by Group</h3>
+      <canvas id="groupStackChart" height="320"></canvas>
+    </div>
+  </div>
+</div>
+
+
+<div class="footer">
+  <div class="container">
+    <p>Data: City of Boston Employee Earnings Report, 2025 &bull; Built by <a href="#">Lucas Ferrer</a> at the Berkman Klein Center at Harvard</p>
+    <p style="margin-top:8px;">Dashboard auto-generated from public payroll data. All figures represent gross pay.</p>
+  </div>
+</div>
+
+<script>
+// ─── Utilities ───────────────────────────────────────
+const fmt = n => '$' + n.toLocaleString('en-US');
+const fmtM = n => '$' + (n / 1e6).toFixed(1) + 'M';
+const fmtB = n => '$' + (n / 1e9).toFixed(2) + 'B';
+const fmtK = n => '$' + (n / 1e3).toFixed(0) + 'K';
+const pct = (a, b) => ((a / b) * 100).toFixed(1) + '%';
+
+Chart.defaults.color = '#8888a0';
+Chart.defaults.borderColor = 'rgba(42,42,58,0.5)';
+Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+
+// ─── Hero Stats ──────────────────────────────────────
+document.getElementById('hero-payroll').textContent = fmtB(DATA.total_payroll);
+document.getElementById('hero-employees').textContent = DATA.employee_count.toLocaleString();
+document.getElementById('hero-median').textContent = fmtK(DATA.median_pay);
+document.getElementById('hero-mean-sub').textContent = 'Mean: ' + fmtK(DATA.mean_pay);
+document.getElementById('hero-overtime').textContent = fmtM(DATA.total_overtime);
+document.getElementById('hero-ot-sub').textContent = pct(DATA.total_overtime, DATA.total_payroll) + ' of payroll';
+document.getElementById('hero-max').textContent = fmtK(DATA.max_pay);
+document.getElementById('hero-max-sub').textContent = DATA.top_earners[0].name.split(',').reverse().join(' ').trim();
+document.getElementById('hero-200k').textContent = DATA.over_200k_count.toLocaleString();
+document.getElementById('hero-200k-sub').textContent = pct(DATA.over_200k_count, DATA.employee_count) + ' of workforce';
+
+// ─── Payroll Composition Donut ───────────────────────
+const comp = DATA.payroll_composition;
+new Chart(document.getElementById('compositionChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Base Salary', 'Overtime', 'Detail', 'Quinn Education', 'Other', 'Retro', 'Injured'],
+    datasets: [{
+      data: [comp.regular, comp.overtime, comp.detail, comp.quinn, comp.other, comp.retro, comp.injured],
+      backgroundColor: ['#6366f1', '#ef4444', '#f59e0b', '#a855f7', '#06b6d4', '#22c55e', '#64748b'],
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'right', labels: { padding: 12, usePointStyle: true, pointStyle: 'rectRounded' } },
+      tooltip: { callbacks: { label: ctx => ctx.label + ': ' + fmtM(ctx.raw) + ' (' + pct(ctx.raw, DATA.total_payroll) + ')' } }
+    }
+  }
+});
+
+// ─── Pay Histogram ───────────────────────────────────
+new Chart(document.getElementById('histogramChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.pay_histogram.labels,
+    datasets: [{
+      data: DATA.pay_histogram.counts,
+      backgroundColor: DATA.pay_histogram.counts.map((_, i) => {
+        const colors = ['#22c55e','#22c55e','#06b6d4','#06b6d4','#6366f1','#6366f1','#a855f7','#a855f7','#f59e0b','#f59e0b','#ef4444','#ef4444'];
+        return colors[i] || '#ef4444';
+      }),
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw.toLocaleString() + ' employees' } } },
+    scales: {
+      y: { grid: { color: 'rgba(42,42,58,0.3)' }, title: { display: true, text: 'Employees' } },
+      x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+    }
+  }
+});
+
+// ─── Police Share Section ────────────────────────────
+document.getElementById('bpd-headcount-pct').textContent = DATA.police_share.headcount_pct + '%';
+document.getElementById('bpd-payroll-pct').textContent = DATA.police_share.payroll_pct + '%';
+document.getElementById('bpd-ot-pct').textContent = DATA.police_share.overtime_pct + '%';
+document.getElementById('bpd-detail-pct').textContent = DATA.police_share.detail_pct + '%';
+
+// Share bars
+const shareData = [
+  { label: 'Police', headcount: DATA.police_share.headcount_pct, payroll: DATA.police_share.payroll_pct, color: '#ef4444' },
+  { label: 'Fire', headcount: DATA.fire_share.headcount_pct, payroll: DATA.fire_share.payroll_pct, color: '#f59e0b' },
+  { label: 'All Others', headcount: (100 - DATA.police_share.headcount_pct - DATA.fire_share.headcount_pct).toFixed(1), payroll: (100 - DATA.police_share.payroll_pct - DATA.fire_share.payroll_pct).toFixed(1), color: '#6366f1' },
+];
+let shareBarsHTML = `
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
+<div>
+  <div style="font-size:0.78rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; margin-bottom:12px;">% of Workforce</div>
+  <div class="stacked-bar">` +
+    shareData.map(s => `<div style="flex:${s.headcount};background:${s.color}">${s.headcount}%</div>`).join('') +
+  `</div>
+</div>
+<div>
+  <div style="font-size:0.78rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; font-weight:600; margin-bottom:12px;">% of Payroll</div>
+  <div class="stacked-bar">` +
+    shareData.map(s => `<div style="flex:${s.payroll};background:${s.color}">${s.payroll}%</div>`).join('') +
+  `</div>
+</div></div>
+<div class="legend" style="margin-top:16px;">` +
+    shareData.map(s => `<div class="legend-item"><div class="legend-dot" style="background:${s.color}"></div>${s.label}</div>`).join('') +
+`</div>`;
+document.getElementById('share-bars').innerHTML = shareBarsHTML;
+
+// ─── Group Avg Chart ─────────────────────────────────
+const groups = DATA.group_comparison;
+new Chart(document.getElementById('groupAvgChart'), {
+  type: 'bar',
+  data: {
+    labels: groups.map(g => g.label),
+    datasets: [
+      { label: 'Base Salary', data: groups.map(g => g.avg_regular), backgroundColor: '#6366f1', borderRadius: 4 },
+      { label: 'Overtime', data: groups.map(g => g.avg_overtime), backgroundColor: '#ef4444', borderRadius: 4 },
+      { label: 'Detail', data: groups.map(g => g.avg_detail), backgroundColor: '#f59e0b', borderRadius: 4 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'rectRounded', padding: 16 } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt(ctx.raw) } }
+    },
+    scales: {
+      x: { stacked: true, grid: { display: false } },
+      y: { stacked: true, grid: { color: 'rgba(42,42,58,0.3)' }, ticks: { callback: v => fmtK(v) } }
+    }
+  }
+});
+
+// ─── BPD Rank Chart ──────────────────────────────────
+const bpdRanks = DATA.bpd_ranks.slice(0, 10);
+new Chart(document.getElementById('bpdRankChart'), {
+  type: 'bar',
+  data: {
+    labels: bpdRanks.map(r => r.rank.replace('Police ', '').replace('Lieut-Hackney Carriage Inves.', 'Lt-Hackney Inv.')),
+    datasets: [
+      { label: 'Base', data: bpdRanks.map(r => r.avg_regular), backgroundColor: '#6366f1', borderRadius: 2 },
+      { label: 'Overtime', data: bpdRanks.map(r => r.avg_overtime), backgroundColor: '#ef4444', borderRadius: 2 },
+      { label: 'Detail', data: bpdRanks.map(r => r.avg_detail), backgroundColor: '#f59e0b', borderRadius: 2 },
+      { label: 'Quinn', data: bpdRanks.map(r => r.avg_quinn), backgroundColor: '#a855f7', borderRadius: 2 },
+    ]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: {
+      legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'rectRounded', padding: 16 } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt(ctx.raw) } }
+    },
+    scales: {
+      x: { stacked: true, grid: { color: 'rgba(42,42,58,0.3)' }, ticks: { callback: v => fmtK(v) } },
+      y: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } }
+    }
+  }
+});
+
+// ─── OT Section ──────────────────────────────────────
+document.getElementById('ot-warrior-count').textContent = DATA.ot_warrior_count;
+if (DATA.ot_warriors.length > 0) {
+  document.getElementById('ot-warrior-top').textContent = fmt(DATA.ot_warriors[0].overtime);
+  document.getElementById('ot-warrior-top-base').textContent = fmt(DATA.ot_warriors[0].regular);
+}
+
+// OT Dept chart
+const otDepts = DATA.dept_ot_concentration.filter(d => d.overtime > 500000);
+new Chart(document.getElementById('otDeptChart'), {
+  type: 'bar',
+  data: {
+    labels: otDepts.map(d => d.name.length > 30 ? d.name.slice(0, 28) + '…' : d.name),
+    datasets: [
+      { label: 'Overtime ($)', data: otDepts.map(d => d.overtime), backgroundColor: '#ef4444', borderRadius: 4, yAxisID: 'y' },
+      { label: 'OT as % of Dept Pay', data: otDepts.map(d => d.ot_pct), backgroundColor: '#f59e0b88', borderRadius: 4, yAxisID: 'y1', type: 'line', borderColor: '#f59e0b', pointBackgroundColor: '#f59e0b', tension: 0.3 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'rectRounded', padding: 16 } },
+      tooltip: { callbacks: { label: ctx => ctx.datasetIndex === 0 ? fmtM(ctx.raw) : ctx.raw + '%' } }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } },
+      y: { position: 'left', grid: { color: 'rgba(42,42,58,0.3)' }, ticks: { callback: v => fmtM(v) }, title: { display: true, text: 'Overtime $' } },
+      y1: { position: 'right', grid: { display: false }, ticks: { callback: v => v + '%' }, title: { display: true, text: '% of Dept Pay' }, min: 0 }
+    }
+  }
+});
+
+// OT Warriors table
+const otTbody = document.getElementById('ot-warriors-table');
+DATA.ot_warriors.forEach(w => {
+  const ratioBadge = w.ot_ratio >= 2 ? 'badge-red' : w.ot_ratio >= 1.5 ? 'badge-orange' : 'badge-green';
+  otTbody.innerHTML += `<tr>
+    <td>${w.name}</td>
+    <td>${w.title}</td>
+    <td class="right">${fmt(w.regular)}</td>
+    <td class="right" style="color:#ef4444;font-weight:600">${fmt(w.overtime)}</td>
+    <td class="right"><span class="badge ${ratioBadge}">${w.ot_ratio}x</span></td>
+    <td class="right" style="font-weight:600">${fmt(w.total)}</td>
+  </tr>`;
+});
+
+// ─── $200K Club ──────────────────────────────────────
+document.getElementById('club-count').textContent = DATA.over_200k_count.toLocaleString();
+const club = DATA.over_200k_by_dept;
+new Chart(document.getElementById('club200kChart'), {
+  type: 'bar',
+  data: {
+    labels: club.map(d => d.dept.length > 28 ? d.dept.slice(0, 26) + '…' : d.dept),
+    datasets: [{
+      data: club.map(d => d.count),
+      backgroundColor: club.map((_, i) => i < 2 ? '#ef4444' : '#6366f1'),
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + ' employees' } } },
+    scales: {
+      x: { grid: { color: 'rgba(42,42,58,0.3)' }, title: { display: true, text: 'Employees earning $200K+' } },
+      y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// Dept avg chart (top 15)
+const deptTop = DATA.departments.slice(0, 15);
+new Chart(document.getElementById('deptAvgChart'), {
+  type: 'bar',
+  data: {
+    labels: deptTop.map(d => d.name.length > 28 ? d.name.slice(0, 26) + '…' : d.name),
+    datasets: [{
+      label: 'Average Total Comp',
+      data: deptTop.map(d => d.avg),
+      backgroundColor: deptTop.map(d => d.avg > 150000 ? '#ef4444' : d.avg > 100000 ? '#f59e0b' : '#6366f1'),
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmt(ctx.raw) + ' avg (' + deptTop[ctx.dataIndex].count + ' emp)' } } },
+    scales: {
+      x: { grid: { color: 'rgba(42,42,58,0.3)' }, ticks: { callback: v => fmtK(v) } },
+      y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+    }
+  }
+});
+
+// ─── Top Earners Table ───────────────────────────────
+const teTbody = document.getElementById('top-earners-table');
+DATA.top_earners.forEach((e, i) => {
+  const otPct = e.regular > 0 ? ((e.overtime / e.regular) * 100).toFixed(0) : 0;
+  teTbody.innerHTML += `<tr>
+    <td style="color:var(--text-dim)">${i + 1}</td>
+    <td style="font-weight:600">${e.name}</td>
+    <td>${e.dept.length > 25 ? e.dept.slice(0, 23) + '…' : e.dept}</td>
+    <td>${e.title}</td>
+    <td class="right">${fmt(e.regular)}</td>
+    <td class="right" style="color:${e.overtime > e.regular ? '#ef4444' : 'inherit'}">${e.overtime > 0 ? fmt(e.overtime) : '—'}</td>
+    <td class="right" style="color:${e.detail > 50000 ? '#f59e0b' : 'inherit'}">${e.detail > 0 ? fmt(e.detail) : '—'}</td>
+    <td class="right">${e.quinn > 0 ? fmt(e.quinn) : '—'}</td>
+    <td class="right">${e.other > 0 ? fmt(e.other) : '—'}</td>
+    <td class="right" style="font-weight:700">${fmt(e.total)}</td>
+  </tr>`;
+});
+
+// ─── Dept Scatter / Bubble ───────────────────────────
+const deptBubble = DATA.departments.slice(0, 25);
+const maxTotal = Math.max(...deptBubble.map(d => d.total));
+new Chart(document.getElementById('deptScatterChart'), {
+  type: 'bubble',
+  data: {
+    datasets: deptBubble.map((d, i) => ({
+      label: d.name,
+      data: [{ x: d.count, y: d.avg, r: Math.max(4, Math.sqrt(d.total / maxTotal) * 45) }],
+      backgroundColor: d.name.includes('Police') ? 'rgba(239,68,68,0.6)' :
+                        d.name.includes('Fire') ? 'rgba(245,158,11,0.6)' :
+                        d.name.includes('School') || d.name.includes('Education') || d.name.includes('Teacher') || d.name.includes('BPS') ? 'rgba(34,197,94,0.6)' :
+                        'rgba(99,102,241,0.5)',
+      borderColor: 'transparent',
+    }))
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: {
+        label: ctx => {
+          const d = deptBubble[ctx.datasetIndex];
+          return [d.name, `${d.count} employees`, `Avg: ${fmtK(d.avg)}`, `Total: ${fmtM(d.total)}`];
+        }
+      } }
+    },
+    scales: {
+      x: { grid: { color: 'rgba(42,42,58,0.3)' }, title: { display: true, text: 'Number of Employees' } },
+      y: { grid: { color: 'rgba(42,42,58,0.3)' }, ticks: { callback: v => fmtK(v) }, title: { display: true, text: 'Average Total Compensation' } }
+    }
+  }
+});
+
+// ─── Comparison Bars ─────────────────────────────────
+const maxMedian = Math.max(...groups.map(g => g.median_total));
+let compHTML = '';
+const barColors = ['#ef4444', '#f59e0b', '#6366f1', '#22c55e', '#06b6d4', '#a855f7', '#64748b'];
+groups.forEach((g, i) => {
+  const w = (g.median_total / maxMedian * 100).toFixed(1);
+  compHTML += `<div class="compare-row">
+    <div class="compare-label">${g.label}</div>
+    <div class="compare-bar-wrap">
+      <div class="compare-bar" style="width:${w}%;background:${barColors[i]}">${g.count.toLocaleString()} emp</div>
+    </div>
+    <div class="compare-value">${fmtK(g.median_total)}</div>
+  </div>`;
+});
+document.getElementById('comparison-bars').innerHTML = compHTML;
+
+// ─── Group Stacked Chart ─────────────────────────────
+new Chart(document.getElementById('groupStackChart'), {
+  type: 'bar',
+  data: {
+    labels: groups.map(g => g.label + ' (' + g.count.toLocaleString() + ')'),
+    datasets: [
+      { label: 'Total Payroll ($)', data: groups.map(g => g.total_payroll), backgroundColor: barColors, borderRadius: 4 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => fmtM(ctx.raw) + ' total payroll for ' + groups[ctx.dataIndex].count.toLocaleString() + ' employees' } }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: 'rgba(42,42,58,0.3)' }, ticks: { callback: v => fmtM(v) } }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
